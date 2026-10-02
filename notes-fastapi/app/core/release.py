@@ -7,13 +7,21 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
-_PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_PYPROJECT = _PROJECT_ROOT / "pyproject.toml"
+_BUILT_AT = _PROJECT_ROOT / "BUILT_AT"
 
 
 @cache
 def project_version() -> str:
     with _PYPROJECT.open("rb") as file:
         return str(tomllib.load(file)["project"]["version"])
+
+
+def built_at() -> str:
+    if _BUILT_AT.is_file():
+        return _BUILT_AT.read_text().strip()
+    return "unknown"
 
 
 @dataclass(frozen=True)
@@ -35,7 +43,7 @@ def load_release(*, app_name: str, color: str) -> ReleaseInfo:
         app=app_name,
         version=project_version(),
         git_sha=os.environ.get("GIT_SHA", "unknown"),
-        built_at=os.environ.get("BUILT_AT", "unknown"),
+        built_at=built_at(),
         color=color,
         hostname=socket.gethostname(),
         started_at=datetime.now(tz=UTC).isoformat(timespec="seconds"),

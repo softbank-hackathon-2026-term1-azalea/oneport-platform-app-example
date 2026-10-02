@@ -52,9 +52,7 @@ tasks.withType<Test> {
 }
 
 springBoot {
-	buildInfo {
-		excludes = setOf("time")
-	}
+	buildInfo()
 }
 
 tasks.bootJar {

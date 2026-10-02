@@ -33,7 +33,6 @@ app:
   force-unhealthy: ${APP_FORCE_UNHEALTHY:false}
   release:
     git-sha: ${GIT_SHA:unknown}
-    built-at: ${BUILT_AT:unknown}
 
 management:
   endpoints:
