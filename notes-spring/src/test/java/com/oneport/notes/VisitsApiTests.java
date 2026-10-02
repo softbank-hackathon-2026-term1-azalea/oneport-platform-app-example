@@ -17,6 +17,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "LOG_FORMAT=text")
 @Import(TestcontainersConfiguration.class)
 @AutoConfigureRestTestClient
@@ -53,6 +55,7 @@ class VisitsApiTests {
 		client.post().uri("/visits").exchange().expectStatus().isOk().expectBody().json("{\"visits\":1}");
 		client.post().uri("/visits").exchange().expectStatus().isOk().expectBody().json("{\"visits\":2}");
 		client.get().uri("/visits").exchange().expectStatus().isOk().expectBody().json("{\"visits\":2}");
+		assertThat(redis.opsForValue().get("notes:visits")).isEqualTo("2");
 	}
 
 	@Test
