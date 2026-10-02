@@ -5,6 +5,8 @@ import time
 
 from alembic import command
 from alembic.config import Config
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
@@ -40,6 +42,32 @@ def wait_for_database(timeout_seconds: float, interval_seconds: float = 2.0) -> 
         engine.dispose()
 
 
+def migrate(config: Config) -> bool:
+    script = ScriptDirectory.from_config(config)
+    known = {revision.revision for revision in script.walk_revisions()}
+    engine = create_engine(get_settings().sqlalchemy_url)
+    try:
+        with engine.connect() as connection:
+            current = set(MigrationContext.configure(connection).get_current_heads())
+    finally:
+        engine.dispose()
+
+    unknown = current - known
+    if unknown:
+        log.warning(
+            "database schema is newer than this release, skipping migrations",
+            extra={
+                "database_revisions": sorted(current),
+                "release_head": script.get_current_head(),
+            },
+        )
+        return False
+
+    command.upgrade(config, "head")
+    log.info("migrations applied", extra={"release_head": script.get_current_head()})
+    return True
+
+
 def main() -> None:
     settings = get_settings()
     configure_logging(
@@ -48,8 +76,7 @@ def main() -> None:
         static_fields={"app": settings.app_name, "version": project_version()},
     )
     wait_for_database(timeout_seconds=float(os.environ.get("DB_WAIT_SECONDS", "60")))
-    command.upgrade(Config("alembic.ini"), "head")
-    log.info("migrations applied")
+    migrate(Config("alembic.ini"))
 
 
 if __name__ == "__main__":
