@@ -1,13 +1,13 @@
 # Oneport 플랫폼 시연용 앱
 
-공통 배포 플랫폼(`oneport-platform`)이 수행하는 배포 기능(최초 배포, 블루그린·카나리 전환, DB 마이그레이션, 자동 롤백, 앱별 로그)을 확인하기 위한 앱입니다. 같은 API를 두 프레임워크로 구현했습니다.
+공통 배포 플랫폼(`oneport-platform`)이 수행하는 배포 기능(최초 배포, 블루그린·카나리 전환, DB 마이그레이션, 캐시 연결, 자동 롤백, 앱별 로그)을 확인하기 위한 앱입니다. 같은 API를 두 프레임워크로 구현했습니다.
 
 | 디렉터리 | 프레임워크 | app-id | 주소 |
 | --- | --- | --- | --- |
 | `notes-fastapi/` | Python 3.13, FastAPI, SQLAlchemy 2.0, Alembic | `notes-py` | `https://notes-py.app.yubin.dev` |
 | `notes-spring/` | Java 25, Spring Boot 4.1, Spring Data JPA, Flyway | `notes-java` | `https://notes-java.app.yubin.dev` |
 
-앱 기능은 노트 목록·추가·삭제입니다. 화면 상단 배너가 실행 중인 버전, git SHA, 인스턴스 이름을 1초마다 갱신해 표시하므로 트래픽이 어느 버전으로 가는지 바로 확인할 수 있습니다.
+앱 기능은 노트 목록·추가·삭제와 방문 수 카운터입니다. 화면 상단 배너가 실행 중인 버전, git SHA, 인스턴스 이름을 1초마다 갱신해 표시하므로 트래픽이 어느 버전으로 가는지 바로 확인할 수 있습니다. 방문 수는 Redis(Valkey)에 저장되므로 버전이 바뀌거나 인스턴스가 교체되어도 이어집니다.
 
 ## API 계약
 
@@ -16,13 +16,15 @@
 | 경로 | 응답 | 용도 |
 | --- | --- | --- |
 | `GET /health` | `200 {"status":"ok"}`. DB를 확인하지 않습니다. `APP_FORCE_UNHEALTHY=true`면 `503` | liveness. ALB·Cloud Run health check, 자동 롤백 시연 |
-| `GET /ready` | DB `SELECT 1` 성공 시 `200 {"status":"ok","database":"up"}`, 실패 시 `503` | readiness |
+| `GET /ready` | `200 {"status":"ok","database":"up","cache":"up"}`. 캐시를 쓰지 않으면 `"cache":"disabled"`. DB나 캐시 연결이 실패하면 `503`과 `"down"` | readiness |
 | `GET /version` | `{"app","version","git_sha","built_at","color","hostname","started_at"}` | 릴리즈 식별, 카나리 비율 확인 |
 | `GET /` | 시연 화면 (HTML) | 브라우저로 확인 |
 | `GET /notes?limit=50` | `[{"id","title","created_at","done"}]` 최신순 (`limit` 1~200) | DB 읽기 |
 | `POST /notes` | 본문 `{"title"}` → `201` 생성된 노트. 공백·200자 초과는 `400`(Spring) / `422`(FastAPI) | DB 쓰기 |
 | `PATCH /notes/{id}` | 본문 `{"done": true}` → `200` 변경된 노트. 없는 id는 `404` | DB 쓰기 (1.1.0부터) |
 | `DELETE /notes/{id}` | `204`. 없는 id는 `404` (`note_id` 포함) | DB 쓰기 |
+| `GET /visits` | `{"visits": 12}` | 캐시 읽기 (1.2.0부터) |
+| `POST /visits` | 방문 수를 1 늘리고 `{"visits": 13}` 반환. 화면이 열릴 때 호출합니다 | 캐시 쓰기 (1.2.0부터) |
 | `GET /failure` | 항상 `503` | 실패 응답 감지 검증 |
 
 응답 헤더 `X-Request-ID`에 요청 ID가 들어갑니다. 클라이언트가 UUID 형식으로 보내면 그대로 쓰고, 없거나 형식이 다르면 새로 발급합니다. 같은 값이 로그의 `request_id` 필드에 기록됩니다.
@@ -37,6 +39,7 @@
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` | DB 접속 정보 | AWS는 RDS endpoint, GCP는 Cloud SQL private IP |
 | `DB_PASSWORD` | DB 비밀번호 | 시크릿으로 주입합니다 |
 | `DATABASE_URL` | `postgresql://user:pass@host:port/db?sslmode=require` | 지정하면 `DB_*` 대신 사용합니다. 사용자·비밀번호는 URL 인코딩하고, `sslmode` 같은 쿼리 파라미터는 그대로 전달됩니다 |
+| `REDIS_URL` | `rediss://user:pass@host:6379` | 방문 수 카운터가 쓰는 Redis(Valkey) 주소. AWS ElastiCache Serverless는 TLS가 필수라 `rediss://`입니다. 지정하지 않으면 카운터가 꺼지고 `/visits`는 `503`을 반환합니다. 시크릿으로 주입합니다 |
 | `LAUNCHPAD_RELEASE_ID` | 플랫폼 릴리즈 ID | 지정하면 모든 응답의 `X-Launchpad-Release` 헤더로 반환합니다. 플랫폼이 health check 응답이 새 릴리즈에서 왔는지 확인하는 데 사용합니다 |
 | `GIT_SHA` | 이미지 빌드 시 `--build-arg`로 지정 | `/version`에 노출됩니다. 지정하지 않으면 `unknown` |
 | `APP_COLOR` | CSS 색상 | 배너 색. 버전별 기본값을 이미지에 두고 환경변수로 바꿀 수 있습니다 |
@@ -60,6 +63,12 @@ DB 스키마가 실행 중인 릴리즈보다 새 버전이면 두 앱 모두 �
 
 FastAPI는 `scripts/start.sh migrate`로 마이그레이션만 실행할 수 있습니다. 플랫폼이 Cloud Run Job이나 ECS task로 마이그레이션을 분리하게 되면 이 명령을 사용합니다.
 
+## 캐시
+
+방문 수는 Redis 키 `notes:visits` 하나에 `INCR`로 기록합니다. 상태가 컨테이너가 아니라 캐시에 있으므로 블루그린·카나리 전환 중 두 버전이 함께 응답해도 같은 숫자를 이어서 셉니다. 클라이언트는 FastAPI가 `redis-py`(asyncio), Spring이 Spring Data Redis(Lettuce)이고, 둘 다 Valkey와 호환됩니다.
+
+캐시는 보조 기능입니다. 캐시에 연결할 수 없으면 `/visits`와 `/ready`만 `503`을 반환하고, `/health`와 노트 API는 영향을 받지 않습니다. 따라서 캐시 장애로 배포가 롤백되지는 않습니다.
+
 ## 릴리즈와 태그
 
 릴리즈마다 git 태그 `v<버전>`을 붙입니다. 두 앱은 같은 태그를 공유하고, 화면과 `/version`에 표시되는 버전은 코드(FastAPI `pyproject.toml`, Spring `build.gradle.kts`)에서 읽습니다.
@@ -72,6 +81,7 @@ FastAPI는 `scripts/start.sh migrate`로 마이그레이션만 실행할 수 있
 | `v1.1.0` | `main` | V2 | `done` 컬럼(`NOT NULL DEFAULT false`), `PATCH /notes/{id}`, 완료 체크 UI, 초록 배너 | 기능 릴리즈 기록용 |
 | `v1.1.1` | `main` | V2 | `v1.1.0` + 롤백 대응 | 기록용 |
 | `v1.1.2` | `main` | V2 | `v1.1.1` + 플랫폼 배포 대응 | 블루그린·카나리 전환, 마이그레이션, 자동 롤백 |
+| `v1.2.0` | `main` | V2 | `v1.1.2` + Redis 방문 수 카운터(`/visits`), `/ready` 캐시 확인 | 캐시 연결 확인 |
 
 플랫폼 배포 대응은 `X-Launchpad-Release` 헤더, Spring의 `DATABASE_URL` 지원, FastAPI 마이그레이션 잠금입니다. 플랫폼은 health check 응답에 이 헤더가 없으면 배포를 실패로 처리하므로, 플랫폼 시연에는 `v1.0.2`, `v1.1.2`를 사용합니다. `v1.0.0`, `v1.1.0`의 FastAPI 이미지는 DB 스키마가 더 새 버전이면 기동하지 않아 롤백에도 사용할 수 없습니다.
 
@@ -130,9 +140,18 @@ watch -n 1 'curl -s https://notes-py.app.yubin.dev/version'
 - 배너가 파란색, 버전이 `1.0.2`로 돌아옵니다. `done` 컬럼은 남아 있지만 `1.0.2`는 사용하지 않습니다.
 - 노트 추가·조회·삭제는 정상 동작합니다. `1.0.2`가 추가한 노트는 DB 기본값에 따라 `done: false`가 됩니다.
 
+### 6. 캐시 연결 (`v1.2.0`)
+
+앱 등록 때 캐시를 선택하면 플랫폼이 앱 전용 캐시를 만들고 `REDIS_URL`을 주입합니다. 캐시 생성은 배포와 별개이므로 시연 전에 미리 준비해 둡니다.
+
+1. `v1.2.0` 이미지를 배포합니다. 배너에 `visits` 항목이 나타나고, 화면을 새로고침할 때마다 1씩 늘어납니다.
+2. `/ready`가 `"cache":"up"`을 반환합니다.
+3. 같은 버전을 블루그린으로 다시 배포하면 인스턴스 이름은 바뀌지만 방문 수는 이어집니다. 상태가 캐시에 있다는 것을 보여주는 단계입니다.
+4. `v1.2.0`에서 `v1.1.2`로 롤백하면 배너에서 `visits` 항목이 사라지고, 다시 `v1.2.0`을 배포하면 그동안 쌓인 숫자에서 이어집니다.
+
 ## 로컬 실행
 
-각 디렉터리의 `compose.yaml`이 PostgreSQL과 앱을 함께 띄웁니다. 테스트는 Testcontainers로 PostgreSQL을 실행하므로 Docker가 필요합니다.
+각 디렉터리의 `compose.yaml`이 PostgreSQL, Valkey와 앱을 함께 띄웁니다. 테스트는 Testcontainers로 PostgreSQL과 Valkey를 실행하므로 Docker가 필요합니다.
 
 ```bash
 # FastAPI
