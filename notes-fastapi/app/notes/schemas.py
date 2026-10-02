@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 
 class NoteCreate(BaseModel):
@@ -15,9 +15,14 @@ class NoteCreate(BaseModel):
         return stripped
 
 
+class NoteUpdate(BaseModel):
+    done: StrictBool
+
+
 class NoteRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     title: str
     created_at: datetime
+    done: bool

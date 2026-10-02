@@ -60,7 +60,7 @@ class NotesApiTests {
 			.expectBody(MAP)
 			.returnResult()
 			.getResponseBody();
-		assertThat(body).containsEntry("app", "notes").containsEntry("version", "1.0.0");
+		assertThat(body).containsEntry("app", "notes").containsEntry("version", "1.1.0");
 		assertThat(body).containsEntry("color", "#22c55e");
 		assertThat(body).containsOnlyKeys("app", "version", "git_sha", "built_at", "color", "hostname", "started_at");
 	}
@@ -145,6 +145,39 @@ class NotesApiTests {
 			.expectBody()
 			.jsonPath("$.note_id")
 			.isEqualTo(999999);
+	}
+
+	@Test
+	void newNoteIsNotDone() {
+		create("fresh").expectStatus().isCreated().expectBody().jsonPath("$.done").isEqualTo(false);
+	}
+
+	@Test
+	void patchTogglesDone() {
+		Object id = create("toggle").expectBody(MAP).returnResult().getResponseBody().get("id");
+
+		patch(id, Map.of("done", true)).expectStatus().isOk().expectBody().jsonPath("$.done").isEqualTo(true);
+		client.get().uri("/notes").exchange().expectBody().jsonPath("$[0].done").isEqualTo(true);
+		patch(id, Map.of("done", false)).expectStatus().isOk().expectBody().jsonPath("$.done").isEqualTo(false);
+	}
+
+	@Test
+	void patchMissingNoteReturnsProblemDetail() {
+		patch(999999, Map.of("done", true)).expectStatus()
+			.isNotFound()
+			.expectBody()
+			.jsonPath("$.note_id")
+			.isEqualTo(999999);
+	}
+
+	@Test
+	void patchRequiresDone() {
+		Object id = create("strict").expectBody(MAP).returnResult().getResponseBody().get("id");
+		patch(id, Map.of()).expectStatus().isBadRequest();
+	}
+
+	private RestTestClient.ResponseSpec patch(Object id, Map<String, Object> body) {
+		return client.patch().uri("/notes/" + id).contentType(MediaType.APPLICATION_JSON).body(body).exchange();
 	}
 
 	private RestTestClient.ResponseSpec create(String title) {

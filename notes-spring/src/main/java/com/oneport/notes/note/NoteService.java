@@ -32,6 +32,14 @@ public class NoteService {
 	}
 
 	@Transactional
+	public Note update(long id, NoteUpdateRequest request) {
+		Note note = repository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
+		note.changeDone(request.done());
+		log.atInfo().addKeyValue("note_id", id).addKeyValue("done", request.done()).log("note updated");
+		return note;
+	}
+
+	@Transactional
 	public void delete(long id) {
 		if (repository.deleteByIdReturningCount(id) == 0) {
 			throw new NoteNotFoundException(id);

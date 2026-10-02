@@ -25,6 +25,8 @@
   li { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #d0d7de;
        border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
   li .title { flex: 1; }
+  li.done .title { text-decoration: line-through; color: #6b7280; }
+  li input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--color); }
   li time { font-size: 12px; color: #6b7280; font-variant-numeric: tabular-nums; }
   .error { color: #cf222e; font-size: 13px; min-height: 18px; }
 </style>
@@ -67,6 +69,17 @@
     const ul = $("notes"); ul.replaceChildren();
     for (const n of notes) {
       const li = document.createElement("li");
+      if ("done" in n) {
+        li.classList.toggle("done", n.done);
+        const box = Object.assign(document.createElement("input"), { type: "checkbox", checked: n.done });
+        box.addEventListener("change", async () => {
+          const r = await fetch(`/notes/${n.id}`, { method: "PATCH", headers: { "content-type": "application/json" },
+                                                     body: JSON.stringify({ done: box.checked }) });
+          if (!r.ok) $("error").textContent = `변경 실패 (${r.status})`;
+          loadNotes();
+        });
+        li.append(box);
+      }
       const title = Object.assign(document.createElement("span"), { className: "title", textContent: n.title });
       const time = Object.assign(document.createElement("time"), { textContent: fmt(n.created_at) });
       const del = Object.assign(document.createElement("button"), { className: "ghost", textContent: "삭제" });

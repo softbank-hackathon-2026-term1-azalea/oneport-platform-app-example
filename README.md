@@ -19,8 +19,9 @@
 | `GET /ready` | DB `SELECT 1` 성공 시 `200 {"status":"ok","database":"up"}`, 실패 시 `503` | readiness |
 | `GET /version` | `{"app","version","git_sha","built_at","color","hostname","started_at"}` | 릴리즈 식별, 카나리 비율 확인 |
 | `GET /` | 시연 화면 (HTML) | 브라우저로 확인 |
-| `GET /notes?limit=50` | `[{"id","title","created_at"}]` 최신순 (`limit` 1~200) | DB 읽기 |
+| `GET /notes?limit=50` | `[{"id","title","created_at","done"}]` 최신순 (`limit` 1~200) | DB 읽기 |
 | `POST /notes` | 본문 `{"title"}` → `201` 생성된 노트. 공백·200자 초과는 `400`(Spring) / `422`(FastAPI) | DB 쓰기 |
+| `PATCH /notes/{id}` | 본문 `{"done": true}` → `200` 변경된 노트. 없는 id는 `404` | DB 쓰기 (1.1.0부터) |
 | `DELETE /notes/{id}` | `204`. 없는 id는 `404` (`note_id` 포함) | DB 쓰기 |
 | `GET /failure` | 항상 `503` | 실패 응답 감지 검증 |
 

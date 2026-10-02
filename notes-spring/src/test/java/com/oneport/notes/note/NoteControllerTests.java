@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
@@ -36,7 +37,7 @@ class NoteControllerTests {
 			.bodyJson()
 			.extractingPath("$[0]")
 			.asMap()
-			.containsKeys("id", "title", "created_at")
+			.containsKeys("id", "title", "created_at", "done")
 			.containsEntry("title", "hello");
 	}
 
@@ -50,6 +51,19 @@ class NoteControllerTests {
 			.bodyJson()
 			.extractingPath("$.title")
 			.isEqualTo("hello");
+	}
+
+	@Test
+	void patchUpdatesDone() {
+		Note note = note(3L, "hello");
+		given(note.isDone()).willReturn(true);
+		given(service.update(eq(3L), any())).willReturn(note);
+
+		assertThat(mvc.patch().uri("/notes/3").contentType(MediaType.APPLICATION_JSON).content("{\"done\":true}"))
+			.hasStatusOk()
+			.bodyJson()
+			.extractingPath("$.done")
+			.isEqualTo(true);
 	}
 
 	@Test
@@ -74,6 +88,7 @@ class NoteControllerTests {
 		given(note.getId()).willReturn(id);
 		given(note.getTitle()).willReturn(title);
 		given(note.getCreatedAt()).willReturn(OffsetDateTime.now());
+		given(note.isDone()).willReturn(false);
 		return note;
 	}
 

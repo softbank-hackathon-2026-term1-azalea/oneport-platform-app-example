@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,6 +36,11 @@ class NoteController {
 	@ResponseStatus(HttpStatus.CREATED)
 	NoteResponse create(@Valid @RequestBody NoteCreateRequest request) {
 		return NoteResponse.from(service.create(request));
+	}
+
+	@PatchMapping("/{noteId}")
+	NoteResponse update(@PathVariable long noteId, @Valid @RequestBody NoteUpdateRequest request) {
+		return NoteResponse.from(service.update(noteId, request));
 	}
 
 	@DeleteMapping("/{noteId}")

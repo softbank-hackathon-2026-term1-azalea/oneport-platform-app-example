@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.oneport.notes.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
+import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -22,6 +23,9 @@ class NoteRepositoryTests {
 	@Autowired
 	private NoteRepository repository;
 
+	@Autowired
+	private EntityManager entityManager;
+
 	@Test
 	void listsNewestFirstAndRespectsLimit() {
 		repository.saveAllAndFlush(List.of(new Note("a"), new Note("b"), new Note("c")));
@@ -36,6 +40,20 @@ class NoteRepositoryTests {
 
 		assertThat(saved.getId()).isNotNull();
 		assertThat(saved.getCreatedAt()).isNotNull();
+	}
+
+	@Test
+	void newNoteIsNotDone() {
+		assertThat(repository.saveAndFlush(new Note("fresh")).isDone()).isFalse();
+	}
+
+	@Test
+	void rowWrittenByPreviousReleaseReadsAsNotDone() {
+		entityManager.createNativeQuery("INSERT INTO notes (title) VALUES ('from 1.0.0')").executeUpdate();
+		entityManager.clear();
+
+		assertThat(repository.findAllByOrderByCreatedAtDescIdDesc(Limit.of(1))).singleElement()
+			.satisfies((note) -> assertThat(note.isDone()).isFalse());
 	}
 
 	@Test

@@ -6,7 +6,7 @@ from sqlalchemy import delete, select
 from app.core.db import AsyncSession
 from app.notes.exceptions import NoteNotFoundError
 from app.notes.models import Note
-from app.notes.schemas import NoteCreate
+from app.notes.schemas import NoteCreate, NoteUpdate
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +24,16 @@ async def create_note(session: AsyncSession, data: NoteCreate) -> Note:
     await session.commit()
     await session.refresh(note)
     log.info("note created", extra={"note_id": note.id})
+    return note
+
+
+async def update_note(session: AsyncSession, note_id: int, data: NoteUpdate) -> Note:
+    note = await session.get(Note, note_id)
+    if note is None:
+        raise NoteNotFoundError(note_id)
+    note.done = data.done
+    await session.commit()
+    log.info("note updated", extra={"note_id": note_id, "done": data.done})
     return note
 
 

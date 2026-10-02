@@ -23,6 +23,8 @@ services:
       DB_NAME: notes
       DB_USER: notes
       DB_PASSWORD: notes
+      APP_COLOR: "${APP_COLOR:-#2da44e}"
+      APP_FORCE_UNHEALTHY: "${APP_FORCE_UNHEALTHY:-false}"
       LOG_FORMAT: text
       DOCS_ENABLED: "true"
     ports:

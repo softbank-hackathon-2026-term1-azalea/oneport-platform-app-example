@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, status
 
 from app.api.deps import SessionDep
 from app.notes import service
-from app.notes.schemas import NoteCreate, NoteRead
+from app.notes.schemas import NoteCreate, NoteRead, NoteUpdate
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
@@ -18,6 +18,12 @@ async def list_notes(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_note(session: SessionDep, payload: NoteCreate) -> NoteRead:
     note = await service.create_note(session, payload)
+    return NoteRead.model_validate(note)
+
+
+@router.patch("/{note_id}")
+async def update_note(session: SessionDep, note_id: int, payload: NoteUpdate) -> NoteRead:
+    note = await service.update_note(session, note_id, payload)
     return NoteRead.model_validate(note)
 
 

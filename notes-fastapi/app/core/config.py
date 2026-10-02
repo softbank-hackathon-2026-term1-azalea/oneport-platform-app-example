@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     db_password: SecretStr = SecretStr("")
 
     app_force_unhealthy: bool = False
-    app_color: str = "#1f6feb"
+    app_color: str = "#2da44e"
 
     @property
     def sqlalchemy_url(self) -> URL:

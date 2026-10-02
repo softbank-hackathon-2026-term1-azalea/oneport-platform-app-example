@@ -26,6 +26,9 @@ public class Note {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private OffsetDateTime createdAt;
 
+	@Column(nullable = false)
+	private boolean done;
+
 	protected Note() {
 	}
 
@@ -43,6 +46,14 @@ public class Note {
 
 	public OffsetDateTime getCreatedAt() {
 		return createdAt;
+	}
+
+	public boolean isDone() {
+		return done;
+	}
+
+	void changeDone(boolean done) {
+		this.done = done;
 	}
 
 }
