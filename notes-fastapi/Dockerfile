@@ -14,12 +14,12 @@ COPY alembic ./alembic
 COPY app ./app
 COPY scripts ./scripts
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
+RUN date -u +%Y-%m-%dT%H:%M:%SZ > BUILT_AT
 
 FROM python:3.13-slim-bookworm
 
 ARG GIT_SHA=unknown
-ARG BUILT_AT=unknown
-ENV GIT_SHA=${GIT_SHA} BUILT_AT=${BUILT_AT}
+ENV GIT_SHA=${GIT_SHA}
 
 RUN groupadd --system --gid 999 app && useradd --system --gid 999 --uid 999 --create-home app
 

@@ -14,8 +14,7 @@ RUN java -Djarmode=tools -jar build/libs/app.jar extract --layers --destination 
 FROM eclipse-temurin:25-jre
 
 ARG GIT_SHA=unknown
-ARG BUILT_AT=unknown
-ENV GIT_SHA=${GIT_SHA} BUILT_AT=${BUILT_AT} PORT=8080
+ENV GIT_SHA=${GIT_SHA} PORT=8080
 
 RUN groupadd --system --gid 999 app && useradd --system --gid 999 --uid 999 --create-home app
 WORKDIR /app

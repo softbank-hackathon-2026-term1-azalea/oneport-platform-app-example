@@ -36,7 +36,7 @@
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` | DB 접속 정보 | AWS는 RDS endpoint, GCP는 Cloud SQL private IP |
 | `DB_PASSWORD` | DB 비밀번호 | 시크릿으로 주입합니다 |
 | `DATABASE_URL` | `postgresql://user:pass@host:port/db` | FastAPI만 지원. 지정하면 `DB_*` 대신 사용합니다 |
-| `APP_VERSION`, `GIT_SHA`, `BUILT_AT` | 이미지 빌드 시 `--build-arg`로 고정 | `/version`에 노출됩니다 |
+| `GIT_SHA` | 이미지 빌드 시 `--build-arg`로 지정 | `/version`에 노출됩니다. 지정하지 않으면 `unknown` |
 | `APP_COLOR` | CSS 색상 | 배너 색. 버전별 기본값을 이미지에 두고 환경변수로 바꿀 수 있습니다 |
 | `APP_FORCE_UNHEALTHY` | `true`/`false` | `true`면 `/health`가 503을 반환합니다 |
 | `LOG_FORMAT` | `json`(기본) 또는 `text` | 플랫폼에서는 `json`, 로컬에서는 `text` |
@@ -62,14 +62,12 @@ FastAPI는 `scripts/start.sh migrate`로 마이그레이션만 실행할 수 있
 | `1.1.0` | `done` 컬럼 추가 (V2, `NOT NULL DEFAULT false`), 완료 체크 UI, 초록 배너 | 블루그린·카나리 전환, 마이그레이션 |
 | `1.2.0` | 코드 변경 없음. `APP_FORCE_UNHEALTHY=true`로 배포 | 자동 롤백 |
 
-이미지 태그는 git commit SHA를 사용합니다. 버전 값은 빌드 인자로 넣습니다.
+버전은 코드에서 읽습니다(FastAPI `pyproject.toml`, Spring `build.gradle.kts`). 빌드 시각은 이미지를 빌드할 때 자동으로 기록됩니다. 릴리즈 커밋에는 `v<버전>` 태그를 붙이고, 이미지 태그는 git commit SHA를 사용합니다.
 
 ```bash
 # notes-fastapi 또는 notes-spring 에서
 docker build --platform linux/amd64 \
-  --build-arg APP_VERSION=1.0.0 \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
-  --build-arg BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   -t "<registry>/oneport/notes-py:$(git rev-parse --short HEAD)" .
 ```
 

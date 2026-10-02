@@ -17,8 +17,10 @@ public class ReleaseConfiguration {
 	ReleaseInfo releaseInfo(AppProperties properties, ObjectProvider<BuildProperties> buildProperties) {
 		BuildProperties build = buildProperties.getIfAvailable();
 		String version = (build != null) ? build.getVersion() : "dev";
+		String builtAt = (build != null && build.getTime() != null)
+				? build.getTime().truncatedTo(ChronoUnit.SECONDS).toString() : "unknown";
 		return new ReleaseInfo(properties.name(), version, properties.release().gitSha(),
-				properties.release().builtAt(), properties.color(), hostname(),
+				builtAt, properties.color(), hostname(),
 				Instant.now().truncatedTo(ChronoUnit.SECONDS));
 	}
 

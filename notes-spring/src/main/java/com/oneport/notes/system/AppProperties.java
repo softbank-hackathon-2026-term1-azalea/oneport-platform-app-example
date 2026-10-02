@@ -10,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
 public record AppProperties(@NotBlank String name, @NotBlank String color, boolean forceUnhealthy,
 		@Valid Release release) {
 
-	public record Release(@NotBlank String gitSha, @NotBlank String builtAt) {
+	public record Release(@NotBlank String gitSha) {
 	}
 
 }
