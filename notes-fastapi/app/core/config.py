@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     db_password: SecretStr = SecretStr("")
 
     app_force_unhealthy: bool = False
+    launchpad_release_id: str | None = None
     app_color: str = "#1f6feb"
 
     @property
