@@ -2,10 +2,12 @@ import importlib
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 
 from app.core.config import get_settings
 from app.core.db import Base
+
+MIGRATION_LOCK_ID = 7_210_001
 
 config = context.config
 if config.config_file_name is not None:
@@ -37,6 +39,7 @@ def run_migrations_online() -> None:
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
+            connection.execute(text("SELECT pg_advisory_xact_lock(:id)"), {"id": MIGRATION_LOCK_ID})
             context.run_migrations()
 
 

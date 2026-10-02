@@ -53,6 +53,9 @@ def create_app() -> FastAPI:
     ) -> Response:
         started = time.perf_counter()
         response = await call_next(request)
+        release_id = request.app.state.settings.launchpad_release_id
+        if release_id:
+            response.headers["X-Launchpad-Release"] = release_id
         if request.url.path not in ("/health", "/ready"):
             log.info(
                 "request",
