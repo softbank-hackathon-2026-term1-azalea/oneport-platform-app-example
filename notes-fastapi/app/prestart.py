@@ -10,6 +10,7 @@ from sqlalchemy.exc import OperationalError
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.release import project_version
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def main() -> None:
     configure_logging(
         fmt=settings.log_format,
         level=settings.log_level,
-        static_fields={"app": settings.app_name, "version": os.environ.get("APP_VERSION", "dev")},
+        static_fields={"app": settings.app_name, "version": project_version()},
     )
     wait_for_database(timeout_seconds=float(os.environ.get("DB_WAIT_SECONDS", "60")))
     command.upgrade(Config("alembic.ini"), "head")

@@ -20,7 +20,6 @@ def database_url() -> Iterator[str]:
 def configure_env(database_url: str, monkeypatch_session: pytest.MonkeyPatch) -> None:
     monkeypatch_session.setenv("DATABASE_URL", database_url)
     monkeypatch_session.setenv("LOG_FORMAT", "text")
-    monkeypatch_session.setenv("APP_VERSION", "test")
     monkeypatch_session.delenv("APP_FORCE_UNHEALTHY", raising=False)
     get_settings.cache_clear()
 

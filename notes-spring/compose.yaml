@@ -15,7 +15,7 @@ services:
     build:
       context: .
       args:
-        APP_VERSION: 1.0.0-local
+        GIT_SHA: local
     environment:
       PORT: "8080"
       DB_HOST: db
@@ -23,6 +23,8 @@ services:
       DB_NAME: notes
       DB_USER: notes
       DB_PASSWORD: notes
+      APP_COLOR: "${APP_COLOR:-#1f6feb}"
+      APP_FORCE_UNHEALTHY: "${APP_FORCE_UNHEALTHY:-false}"
       LOG_FORMAT: text
     ports:
       - "8081:8080"

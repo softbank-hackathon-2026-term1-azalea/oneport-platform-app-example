@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "app.force-unhealthy=true", "LOG_FORMAT=text" })
+		properties = { "APP_FORCE_UNHEALTHY=true", "LOG_FORMAT=text" })
 @Import(TestcontainersConfiguration.class)
 @AutoConfigureRestTestClient
 class ForcedUnhealthyTests {

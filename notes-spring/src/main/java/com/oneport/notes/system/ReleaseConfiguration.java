@@ -5,6 +5,8 @@ import java.net.UnknownHostException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,8 +14,10 @@ import org.springframework.context.annotation.Configuration;
 public class ReleaseConfiguration {
 
 	@Bean
-	ReleaseInfo releaseInfo(AppProperties properties) {
-		return new ReleaseInfo(properties.name(), properties.release().version(), properties.release().gitSha(),
+	ReleaseInfo releaseInfo(AppProperties properties, ObjectProvider<BuildProperties> buildProperties) {
+		BuildProperties build = buildProperties.getIfAvailable();
+		String version = (build != null) ? build.getVersion() : "dev";
+		return new ReleaseInfo(properties.name(), version, properties.release().gitSha(),
 				properties.release().builtAt(), properties.color(), hostname(),
 				Instant.now().truncatedTo(ChronoUnit.SECONDS));
 	}

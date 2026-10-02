@@ -17,10 +17,9 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
 
 FROM python:3.13-slim-bookworm
 
-ARG APP_VERSION=dev
 ARG GIT_SHA=unknown
 ARG BUILT_AT=unknown
-ENV APP_VERSION=${APP_VERSION} GIT_SHA=${GIT_SHA} BUILT_AT=${BUILT_AT}
+ENV GIT_SHA=${GIT_SHA} BUILT_AT=${BUILT_AT}
 
 RUN groupadd --system --gid 999 app && useradd --system --gid 999 --uid 999 --create-home app
 

@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "APP_VERSION=test", "LOG_FORMAT=text" })
+		properties = { "APP_COLOR=#22c55e", "LOG_FORMAT=text" })
 @Import(TestcontainersConfiguration.class)
 @AutoConfigureRestTestClient
 class NotesApiTests {
@@ -60,7 +60,8 @@ class NotesApiTests {
 			.expectBody(MAP)
 			.returnResult()
 			.getResponseBody();
-		assertThat(body).containsEntry("app", "notes").containsEntry("version", "test");
+		assertThat(body).containsEntry("app", "notes").containsEntry("version", "1.0.0");
+		assertThat(body).containsEntry("color", "#22c55e");
 		assertThat(body).containsOnlyKeys("app", "version", "git_sha", "built_at", "color", "hostname", "started_at");
 	}
 

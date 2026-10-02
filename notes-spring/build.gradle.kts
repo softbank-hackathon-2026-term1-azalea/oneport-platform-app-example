@@ -51,8 +51,17 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
+springBoot {
+	buildInfo {
+		excludes = setOf("time")
+	}
+}
+
 tasks.bootJar {
 	archiveFileName = "app.jar"
+	manifest {
+		attributes("Implementation-Version" to project.version)
+	}
 }
 
 tasks.jar {

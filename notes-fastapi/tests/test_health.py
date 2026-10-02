@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings, get_settings
+from app.core.release import project_version
 from app.main import app
 
 
@@ -29,7 +30,7 @@ def test_ready_checks_database(client: TestClient) -> None:
 def test_version_exposes_release_info(client: TestClient) -> None:
     body = client.get("/version").json()
     assert body["app"] == "notes"
-    assert body["version"] == "test"
+    assert body["version"] == project_version() == "1.0.0"
     assert set(body) == {"app", "version", "git_sha", "built_at", "color", "hostname", "started_at"}
 
 
