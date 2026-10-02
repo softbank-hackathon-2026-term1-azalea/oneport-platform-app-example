@@ -51,6 +51,19 @@ class NotesApiTests {
 	}
 
 	@Test
+	void visitsAreUnavailableWithoutCache() {
+		client.get().uri("/ready").exchange().expectStatus().isOk().expectBody().jsonPath("$.cache").isEqualTo("disabled");
+		client.post()
+			.uri("/visits")
+			.exchange()
+			.expectStatus()
+			.isEqualTo(503)
+			.expectBody()
+			.jsonPath("$.detail")
+			.isEqualTo("cache is not configured");
+	}
+
+	@Test
 	void versionExposesReleaseInfo() {
 		Map<String, Object> body = client.get()
 			.uri("/version")

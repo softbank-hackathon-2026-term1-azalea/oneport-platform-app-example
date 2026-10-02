@@ -24,7 +24,7 @@ def test_health_forced_unhealthy(client: TestClient) -> None:
 def test_ready_checks_database(client: TestClient) -> None:
     response = client.get("/ready")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "database": "up"}
+    assert response.json() == {"status": "ok", "database": "up", "cache": "up"}
 
 
 def test_version_exposes_release_info(client: TestClient) -> None:

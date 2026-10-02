@@ -10,6 +10,11 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:notes}
     username: ${DB_USER:notes}
     password: ${DB_PASSWORD:}
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 2s
+      connect-timeout: 2s
   jpa:
     open-in-view: false
     hibernate:
@@ -39,6 +44,9 @@ management:
     web:
       exposure:
         include: health,info
+  health:
+    redis:
+      enabled: false
   endpoint:
     health:
       probes:
