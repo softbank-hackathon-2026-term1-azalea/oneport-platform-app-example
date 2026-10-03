@@ -26,7 +26,8 @@ RUN groupadd --system --gid 999 app && useradd --system --gid 999 --uid 999 --cr
 COPY --from=builder --chown=app:app /app /app
 
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PORT=8080
-USER app
+# Numeric identity allows Kubernetes runAsNonRoot to verify this image.
+USER 999:999
 WORKDIR /app
 EXPOSE 8080
 
