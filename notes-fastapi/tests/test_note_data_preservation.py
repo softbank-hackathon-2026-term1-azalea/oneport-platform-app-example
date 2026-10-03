@@ -3,11 +3,12 @@
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
 
 from app.prestart import migrate
 
 
-def _connect(database_url: str):
+def _connect(database_url: str) -> Engine:
     return create_engine(database_url)
 
 
@@ -28,7 +29,9 @@ def test_upgrade_0001_to_0002_preserves_note_and_done_state(database_url: str) -
         title, done = connection.execute(
             text("SELECT title, done FROM notes WHERE title = 'SoftBank Demo'")
         ).one()
-        version = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+        version: str = connection.execute(
+            text("SELECT version_num FROM alembic_version")
+        ).scalar_one()
     assert (title, done, version) == ("SoftBank Demo", False, "0002")
 
     # The user checks the note off on v2.
