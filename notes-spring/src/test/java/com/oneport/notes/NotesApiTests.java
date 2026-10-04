@@ -60,7 +60,7 @@ class NotesApiTests {
 			.expectBody(MAP)
 			.returnResult()
 			.getResponseBody();
-		assertThat(body).containsEntry("app", "notes").containsEntry("version", "1.1.2");
+		assertThat(body).containsEntry("app", "notes").containsEntry("version", "1.1.3");
 		assertThat(body).containsEntry("color", "#22c55e");
 		assertThat(body).containsOnlyKeys("app", "version", "git_sha", "built_at", "color", "hostname", "started_at");
 	}
