@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.oneport"
-version = "1.2.0"
+version = "1.2.1"
 description = "Oneport demo notes app (Spring Boot)"
 
 java {
