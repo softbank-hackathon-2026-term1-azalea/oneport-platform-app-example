@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     app_force_unhealthy: bool = False
     launchpad_release_id: str | None = None
-    app_color: str = "#2da44e"
+    app_color: str = "#0969da"
 
     @property
     def sqlalchemy_url(self) -> URL:

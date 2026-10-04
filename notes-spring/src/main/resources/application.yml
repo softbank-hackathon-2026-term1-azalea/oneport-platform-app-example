@@ -29,7 +29,7 @@ server:
 
 app:
   name: notes
-  color: ${APP_COLOR:#2da44e}
+  color: ${APP_COLOR:#0969da}
   force-unhealthy: ${APP_FORCE_UNHEALTHY:false}
   release:
     git-sha: ${GIT_SHA:unknown}
